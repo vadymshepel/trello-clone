@@ -6,7 +6,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: project_db
+      POSTGRES_DB: trello_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
     ports:
@@ -22,6 +22,9 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+
     ports:
       - "8000:8000"
     environment:
@@ -36,6 +39,26 @@ services:
     depends_on:
       - db
       - redis
+  
+  celery:
+    build: .
+    command: celery -A your_project_name worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DB_NAME=project_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - web
+
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:
